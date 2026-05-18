@@ -1,19 +1,19 @@
 {
   "database": {
-    "host": "localhost",
-    "port": 3306,
+    "host": "shortline.proxy.rlwy.net",
+    "port": 42263,
     "user": "root",
-    "password": "",
-    "database": "node_mysql_api"
+    "password": "REPLACE_WITH_YOUR_RAILWAY_PASSWORD",
+    "database": "railway"
   },
-  "secret": "SUPER_SECRET_KEY_REPLACE_ME_IN_PRODUCTION",
-  "emailFrom": "heather.huels@ethereal.email",
+  "secret": "REPLACE_WITH_A_LONG_RANDOM_STRING",
+  "emailFrom": "REPLACE_WITH_YOUR_BREVO_VERIFIED_SENDER_EMAIL",
   "smtpOptions": {
-    "host": "smtp.ethereal.email",
+    "host": "smtp-relay.brevo.com",
     "port": 587,
     "auth": {
-        "user": "heather.huels@ethereal.email",
-        "pass": "awJxfyfxHdJ4rT8cjQ"
+      "user": "REPLACE_WITH_YOUR_BREVO_LOGIN_EMAIL",
+      "pass": "REPLACE_WITH_YOUR_BREVO_SMTP_KEY"
     }
-}
+  }
 }

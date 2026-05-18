@@ -1,12 +1,14 @@
 import nodemailer from 'nodemailer';
-import config from '../config.json' with { type: 'json' };
 
-export default async function sendEmail({ to, subject, html, from = config.emailFrom }: any) {
+export default async function sendEmail({ to, subject, html, from = process.env.EMAIL_FROM }: any) {
     const transporter = nodemailer.createTransport({
-        ...config.smtpOptions,
-        tls: {
-            rejectUnauthorized: false
-        }
+        host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
+        port: parseInt(process.env.SMTP_PORT || '587'),
+        auth: {
+            user: process.env.SMTP_USER || '',
+            pass: process.env.SMTP_PASS || '',
+        },
+        tls: { rejectUnauthorized: false }
     });
     await transporter.sendMail({ from, to, subject, html });
 }

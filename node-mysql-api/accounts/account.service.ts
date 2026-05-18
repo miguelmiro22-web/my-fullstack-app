@@ -1,4 +1,4 @@
-import config from '../config.json' with { type: 'json' };
+const config = { secret: process.env.JWT_SECRET || 'FALLBACK_SECRET' };
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
