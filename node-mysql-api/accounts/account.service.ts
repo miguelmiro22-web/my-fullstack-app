@@ -47,7 +47,7 @@ async function refreshToken({ token, ipAddress }: any) {
     const account = await refreshToken.getAccount();
 
     const newRefreshToken = generateRefreshToken(account, ipAddress);
-    refreshToken.revoked = Date.now();
+    refreshToken.revoked = new Date();
     refreshToken.revokedByIp = ipAddress;
     refreshToken.replacedByToken = newRefreshToken.token;
     await refreshToken.save();
@@ -65,16 +65,16 @@ async function refreshToken({ token, ipAddress }: any) {
 async function revokeToken({ token, ipAddress }: any) {
     const refreshToken = await getRefreshToken(token);
 
-    refreshToken.revoked = Date.now();
+    refreshToken.revoked = new Date();
     refreshToken.revokedByIp = ipAddress;
     await refreshToken.save();
 }
 
 async function register(params: any, origin: any) {
     if (await db.Account.findOne({ where: { email: params.email } })) {
-    try { await sendAlreadyRegisteredEmail(params.email, origin); } catch(e) { console.error(e); }
-    return;
-}
+        try { await sendAlreadyRegisteredEmail(params.email, origin); } catch(e) { console.error(e); }
+        return;
+    }
 
     const account = new db.Account(params);
 
@@ -87,10 +87,10 @@ async function register(params: any, origin: any) {
     await account.save();
 
     try {
-    await sendVerificationEmail(account, origin);
-} catch (emailError) {
-    console.error('Failed to send verification email:', emailError);
-}
+        await sendVerificationEmail(account, origin);
+    } catch (emailError) {
+        console.error('Failed to send verification email:', emailError);
+    }
 }
 
 async function verifyEmail({ token }: any) {
@@ -98,7 +98,7 @@ async function verifyEmail({ token }: any) {
 
     if (!account) throw 'Verification failed';
 
-    account.verified = Date.now();
+    account.verified = new Date();
     account.verificationToken = null;
     await account.save();
 }
@@ -112,14 +112,18 @@ async function forgotPassword({ email }: any, origin: any) {
     account.resetTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
     await account.save();
 
-    await sendPasswordResetEmail(account, origin);
+    try {
+        await sendPasswordResetEmail(account, origin);
+    } catch (emailError) {
+        console.error('Failed to send password reset email:', emailError);
+    }
 }
 
 async function validateResetToken({ token }: any) {
     const account = await db.Account.findOne({
         where: {
             resetToken: token,
-            resetTokenExpires: { [Op.gt]: Date.now() }
+            resetTokenExpires: { [Op.gt]: new Date() }
         }
     });
 
@@ -132,7 +136,7 @@ async function resetPassword({ token, password }: any) {
     const account = await validateResetToken({ token });
 
     account.passwordHash = await hash(password);
-    account.passwordReset = Date.now();
+    account.passwordReset = new Date();
     account.resetToken = null;
     await account.save();
 }
@@ -153,7 +157,7 @@ async function create(params: any) {
     }
 
     const account = new db.Account(params);
-    account.verified = Date.now();
+    account.verified = new Date();
 
     account.passwordHash = await hash(params.password);
 
@@ -174,7 +178,7 @@ async function update(id: any, params: any) {
     }
 
     Object.assign(account, params);
-    account.updated = Date.now();
+    account.updated = new Date();
     await account.save();
 
     return basicDetails(account);
