@@ -1,4 +1,3 @@
-const config = { secret: process.env.JWT_SECRET || 'FALLBACK_SECRET' };
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
@@ -6,6 +5,8 @@ import { Op } from 'sequelize';
 import sendEmail from '../_helpers/send-email.js';
 import db from '../_helpers/db.js';
 import Role from '../_helpers/role.js';
+
+const config = { secret: process.env.JWT_SECRET || 'FALLBACK_SECRET' };
 
 export default {
     authenticate,
