@@ -142,14 +142,14 @@ function _delete(req: any, res: any, next: any) {
 // --- Helper Functions ---
 
 function setTokenCookie(res: any, token: any) {
-    // create cookie with refresh token that expires in 7 days
     const cookieOptions = {
         httpOnly: true,
-        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        sameSite: 'none' as const,
+        secure: true
     };
     res.cookie('refreshToken', token, cookieOptions);
 }
-
 // --- Schema Validation Functions ---
 
 function authenticateSchema(req: any, res: any, next: any) {
