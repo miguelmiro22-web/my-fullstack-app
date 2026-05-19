@@ -1,15 +1,20 @@
-import nodemailer from 'nodemailer';
-
 export default async function sendEmail({ to, subject, html, from = process.env.EMAIL_FROM }: any) {
-        const transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
-            port: 465,
-            secure: true,   // <-- add this line
-            auth: {
-                user: process.env.SMTP_USER || '',
-                pass: process.env.SMTP_PASS || '',
-            },
-            tls: { rejectUnauthorized: false }
-        });
-    await transporter.sendMail({ from, to, subject, html });
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'api-key': process.env.BREVO_API_KEY || '',
+        },
+        body: JSON.stringify({
+            sender: { email: from },
+            to: [{ email: to }],
+            subject,
+            htmlContent: html,
+        }),
+    });
+
+    if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Brevo API error: ${error}`);
+    }
 }
