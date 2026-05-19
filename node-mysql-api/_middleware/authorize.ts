@@ -1,8 +1,7 @@
 import { expressjwt } from 'express-jwt';
-import config from '../config.json' with { type: 'json' };
 import db from '../_helpers/db.js';
 
-const { secret } = config;
+const secret = process.env.JWT_SECRET || 'FALLBACK_SECRET';
 
 export default function authorize(roles: any = []) {
     if (typeof roles === 'string') {
