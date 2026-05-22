@@ -1,7 +1,471 @@
 openapi: 3.0.0
 info:
-  title: Node MySQL API
+  title: Node.js Sign-up and Verification API
+  description: Node.js + MySQL - API with email sign-up, verification, authentication and forgot password
   version: 1.0.0
+
 servers:
   - url: http://localhost:4000
-paths: {}
+    description: Local development server
+  - url: https://ipt-2026-backend.onrender.com
+    description: Production server
+
+paths:
+  /accounts/authenticate:
+    post:
+      summary: Authenticate account credentials and return a JWT token and a cookie with a refresh token
+      operationId: authenticate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: miguelmiro22@gmail.com
+                password:
+                  type: string
+                  example: "123123"
+              required: [email, password]
+      responses:
+        "200":
+          description: Account details, JWT access token and refresh token cookie
+          headers:
+            Set-Cookie:
+              description: refreshToken
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /accounts/refresh-token:
+    post:
+      summary: Use a refresh token to generate a new JWT token and a new refresh token
+      operationId: refreshToken
+      parameters:
+        - in: cookie
+          name: refreshToken
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Account details, new JWT access token and new refresh token cookie
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /accounts/revoke-token:
+    post:
+      summary: Revoke a refresh token
+      operationId: revokeToken
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+      responses:
+        "200":
+          description: Token revoked successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /accounts/register:
+    post:
+      summary: Register a new user account and send a verification email
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: Mr
+                firstName:
+                  type: string
+                  example: Miguel
+                lastName:
+                  type: string
+                  example: Miro
+                email:
+                  type: string
+                  example: miguelmiro22@gmail.com
+                password:
+                  type: string
+                  example: "123123"
+                confirmPassword:
+                  type: string
+                  example: "123123"
+                acceptTerms:
+                  type: boolean
+                  example: true
+              required: [title, firstName, lastName, email, password, confirmPassword, acceptTerms]
+      responses:
+        "200":
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /accounts/verify-email:
+    post:
+      summary: Verify a new account with a verification token received by email after registration
+      operationId: verifyEmail
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+              required: [token]
+      responses:
+        "200":
+          description: Verification successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /accounts/forgot-password:
+    post:
+      summary: Submit email address to reset the password on an account
+      operationId: forgotPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: miguelmiro22@gmail.com
+              required: [email]
+      responses:
+        "200":
+          description: Password reset instructions sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /accounts/validate-reset-token:
+    post:
+      summary: Validate the reset password token received by email after submitting to the forgot-password route
+      operationId: validateResetToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+              required: [token]
+      responses:
+        "200":
+          description: Token is valid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /accounts/reset-password:
+    post:
+      summary: Reset the password for an account
+      operationId: resetPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                password:
+                  type: string
+                confirmPassword:
+                  type: string
+              required: [token, password, confirmPassword]
+      responses:
+        "200":
+          description: Password reset successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /accounts:
+    get:
+      summary: Get a list of all accounts
+      operationId: getAll
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of all accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Account"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      summary: Create a new account
+      operationId: create
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAccountRequest"
+      responses:
+        "200":
+          description: Account created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /accounts/{id}:
+    get:
+      summary: Get a single account by id
+      operationId: getById
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Account details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      summary: Update an account
+      operationId: update
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAccountRequest"
+      responses:
+        "200":
+          description: Account updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    delete:
+      summary: Delete an account
+      operationId: deleteAccount
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Account deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    AuthResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+        isVerified:
+          type: boolean
+        jwtToken:
+          type: string
+
+    Account:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+        isVerified:
+          type: boolean
+        created:
+          type: string
+          format: date-time
+        updated:
+          type: string
+          format: date-time
+
+    CreateAccountRequest:
+      type: object
+      required: [title, firstName, lastName, email, password, confirmPassword, role]
+      properties:
+        title:
+          type: string
+          example: Mr
+        firstName:
+          type: string
+          example: Miguel
+        lastName:
+          type: string
+          example: Miro
+        email:
+          type: string
+          example: miguelmiro22@gmail.com
+        password:
+          type: string
+          example: "123123"
+        confirmPassword:
+          type: string
+          example: "123123"
+        role:
+          type: string
+          enum: [Admin, User]
+          example: User
+
+    UpdateAccountRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        confirmPassword:
+          type: string
+        role:
+          type: string
+          enum: [Admin, User]
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/MessageResponse"
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/MessageResponse"
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/MessageResponse"
